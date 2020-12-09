@@ -21,6 +21,17 @@ test_data = pd.merge(test_data, substances_agg, how='left')
 libelle_fe = pd.read_csv('./data/libelle_fe.csv')
 libelle_fe = libelle_fe.drop_duplicates(subset='libelle')
 
+#Simple datapoints ('tx rembours', 'date declar annee', 'date amm annee', 'prix' )
+#-------
+train_data_ids = train_data[['id']].to_numpy()
+train_data_simple_points = train_data[['tx rembours', 'date declar annee', 'date amm annee', 'prix']].to_numpy()
+train_data_simple_points[:,0] = np.array(list(map(lambda s: s.replace('%' , ''), train_data_simple_points[:,0]))).astype(np.float)
+
+test_data_ids = test_data[['id']].to_numpy()
+test_data_simple_points = test_data[['tx rembours', 'date declar annee', 'date amm annee']].to_numpy()
+test_data_simple_points[:,0] = np.array(list(map(lambda s: s.replace('%' , ''), test_data_simple_points[:,0]))).astype(np.float)
+# print(list(map(lambda s: s.replace('%' , ''), train_data_simple_points[:,0])))
+#------------
 
 #ONE HOT ENCODING OF TRIVIAL COLUMNS
 data_point_to_one_hot_encode = {'statut': 2, 'etat commerc': 3, 'agrement col': 4, 'forme pharma': 6, 'voies admin': 7, 'statut admin': 8, 'type proc': 11, 'titulaires': 12}
@@ -47,14 +58,13 @@ def get_libelles( dataframe, libelledata ):
     for datapoint in dataframe:
         # print("datapoint", datapoint)
         row = libelledata.loc[libelledata['libelle'] == datapoint]
-        if row.shape[0] == 0: 
-            libelle_df = libelle_df.append(mean_pd_libelle, ignore_index=True)
-        libelle_df = libelle_df.append(row)
+        if row.shape[0] == 0: libelle_df = libelle_df.append(mean_pd_libelle, ignore_index=True)
+        else: libelle_df = libelle_df.append(row)
 
     return libelle_df
 
-train_data_libelles = get_libelles(train_data['libelle'], libelle_fe)
-test_data_libelles = get_libelles(test_data['libelle'], libelle_fe)
+train_data_libelles = get_libelles(train_data['libelle'], libelle_fe).to_numpy()[:,:-1]
+test_data_libelles = get_libelles(test_data['libelle'], libelle_fe).to_numpy()[:,:-1]
 #-----------------------------------
 
 #SUBSTANCES PROCESSING
@@ -95,16 +105,39 @@ def get_substance_codes( data ):
 
 train_substance_codes = get_substance_codes( train_data )
 test_substance_codes = get_substance_codes( test_data )
-
 # #----------
 print("train_data_onehotlabels.shape", train_data_onehotlabels.shape)
 print("train_data_libelles.shape", train_data_libelles.shape)
 print("train_substance_codes.shape", train_substance_codes.shape)
+print("train_data_simple_points.shape", train_data_simple_points.shape)
+
 
 
 print("test_data_onehotlabels.shape", test_data_onehotlabels.shape)
 print("test_data_libelles.shape", test_data_libelles.shape)
 print("test_substance_codes.shape", test_substance_codes.shape)
+print("test_data_simple_points.shape", test_data_simple_points.shape)
+
+
+# print("train_data_onehotlabels.shape\n", train_data_onehotlabels[:2])
+# print("train_data_libelles.shape\n", train_data_libelles[:2])
+# print("train_substance_codes.shape\n", train_substance_codes[2])
+
+
+# print("test_data_onehotlabels.shape\n", test_data_onehotlabels[:2])
+# print("test_data_libelles.shape\n", test_data_libelles[:2])
+# print("test_substance_codes.shape\n", test_substance_codes[:2])
+
+
+conc_train_data = np.concatenate( (train_data_ids, train_data_onehotlabels, train_data_libelles, train_substance_codes, train_data_simple_points), axis=1 )
+print("conc_train_data.shape", conc_train_data.shape)
+print("conc_train_data[:2]\n", conc_train_data[:2])
+pd.DataFrame(conc_train_data).to_csv("./data/train_data.csv")
+
+conc_test_data = np.concatenate( (test_data_ids, test_data_onehotlabels, test_data_libelles, test_substance_codes, test_data_simple_points), axis=1  )
+print("conc_test_data.shape", conc_test_data.shape)
+print("conc_test_data[:2]\n", conc_test_data[:2])
+pd.DataFrame(conc_test_data).to_csv("./data/test_data.csv")
 
 
 

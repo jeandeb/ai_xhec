@@ -55,28 +55,29 @@ def parse_args(args):
     parser     = argparse.ArgumentParser(description='Create Results csv for a sklearn method.')
 
     #MODEL
+    parser.add_argument('--data', default='./data/train_data.csv',  help='Path to data csv', type=str)
     parser.add_argument('--epochs', default=20000,  help='Number of epochs.', type=int)
     parser.add_argument('--bs', default=0,  help='Batch size.', type=int)
-    parser.add_argument('--lr', default=1e-5,  help='Number of epochs.', type=float)
-    parser.add_argument('--hls', default=100,  help='hidden_layer_sizes.', type=int)
+    parser.add_argument('--lr', default=1e-2,  help='Number of epochs.', type=float)
+    parser.add_argument('--hls', default=50,  help='hidden_layer_sizes.', type=int)
     parser.add_argument('--ele', default=500,  help='hidden_layer_sizes.', type=int)
     parser.add_argument('--adaptive', default=False,  help='adaptive lr.', type=bool)
     parser.add_argument('--tol', default=0,  help='minimum increase for adaptive lr.', type=float)
     parser.add_argument('--substances', default=False,  help='', type=bool)
     parser.add_argument('--no_libelle', default=False,  help='', type=bool)
-    parser.add_argument('--model', default="mlp",  help='adaptive lr.')
+    parser.add_argument('--model', default="mlp",  help='adaptive lr.', type=str)
     return parser.parse_args(args)
 
 
 def train(args=None) :
 
-    x_train, y_train = load_data("new_train_oh.csv", substances=args.substances, libelle=not args.no_libelle)
+    x_train, y_train = load_data(args.data)
 
     model = None
     #TRAINING MODEL
     if args.model == "mlp":
         model = MLPRegressor(activation='relu', alpha=0.0001, batch_size='auto' if args.bs <= 0 else args.bs, beta_1=0.9,
-                    beta_2=0.999, early_stopping=False, epsilon=1e-08,
+                    beta_2=0.999, early_stopping=True, epsilon=1e-08,
                     hidden_layer_sizes=(args.hls,), learning_rate='adaptive' if args.adaptive else 'constant',
                     learning_rate_init=args.lr, max_fun=15000, max_iter=args.epochs,
                     momentum=0.9, n_iter_no_change=args.ele, nesterovs_momentum=True,

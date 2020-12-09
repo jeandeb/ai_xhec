@@ -25,19 +25,16 @@ if __name__ == '__main__':
     args = sys.argv[1:]
     args = parse_args(args)
 
-    x_test, _ = load_data("new_test_oh.csv", train=False, libelle=False, substances=True)
-    test = pd.read_csv("./data/new_test_oh.csv", index_col=0)
-    test = test.convert_dtypes()
+    data = pd.read_csv("./data/test_data.csv", index_col=0).to_numpy()
+    x_test = data[:,1:]
 
     model = pk.load(open(args.model, "rb"))
-
-
     results = model.predict(x_test)
 
     results_new_shape = np.empty((results.shape[0] + 1, 2), dtype='object')
     results_new_shape[0,:] = ['id','prix']
     results_new_shape[1:,1] = results
-    results_new_shape[1:,0] = test.index
+    results_new_shape[1:,0] = data[:,0]
 
 
     with open(os.path.join('results', "{0}.csv".format(os.path.basename(args.model[:-3]))), 'w') as csvfile:
