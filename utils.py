@@ -26,5 +26,6 @@ def load_data(data_file, train=True):
     if train: 
       y_data = data[:,-1]
       print("y_data\n", y_data[:3])
+    
 
     return x_data, y_data
